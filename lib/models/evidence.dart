@@ -16,11 +16,16 @@ class Evidence {
   @HiveField(3)
   final DateTime timestamp;
 
+  // ✅ Human-readable location (e.g. Lafia, Nasarawa)
+  @HiveField(4)
+  final String locationName;
+
   Evidence({
     required this.imagePath,
     required this.latitude,
     required this.longitude,
     required this.timestamp,
+    this.locationName = 'Unknown location', // ✅ SAFE DEFAULT
   });
 
   /* =========================
@@ -34,7 +39,7 @@ class Evidence {
   }
 
   /* =========================
-     MAP CONVERSION (OPTIONAL)
+     MAP CONVERSION
      ========================= */
   Map<String, dynamic> toMap() {
     return {
@@ -42,6 +47,7 @@ class Evidence {
       'latitude': latitude,
       'longitude': longitude,
       'timestamp': timestamp.toIso8601String(),
+      'locationName': locationName,
     };
   }
 
@@ -51,6 +57,7 @@ class Evidence {
       latitude: map['latitude'],
       longitude: map['longitude'],
       timestamp: DateTime.parse(map['timestamp']),
+      locationName: map['locationName'] ?? 'Unknown location',
     );
   }
 }

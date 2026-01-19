@@ -33,9 +33,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
     'Other',
   ];
 
-  /* =========================
-     INIT
-     ========================= */
   @override
   void initState() {
     super.initState();
@@ -43,7 +40,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
   }
 
   /* =========================
-     OPEN CAPTURE EVIDENCE
+     ADD EVIDENCE
      ========================= */
   Future<void> _addEvidence() async {
     final result = await Navigator.push<Evidence>(
@@ -54,7 +51,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
     );
 
     if (result != null) {
-      setState(() {}); // Refresh from Hive
+      setState(() {}); // Refresh UI from Hive
     }
   }
 
@@ -115,7 +112,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
           key: _formKey,
           child: ListView(
             children: [
-              /* CATEGORY */
               const Text(
                 'Incident Category',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -145,7 +141,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
 
               const SizedBox(height: 20),
 
-              /* DESCRIPTION */
               const Text(
                 'Incident Description',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -169,7 +164,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
 
               const SizedBox(height: 24),
 
-              /* EVIDENCE SECTION */
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -210,8 +204,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
                           'Evidence • ${evidence.formattedTime}',
                         ),
                         subtitle: Text(
-                          'Lat: ${evidence.latitude}, '
-                          'Lng: ${evidence.longitude}',
+                          evidence.locationName,
                         ),
                       ),
                     );
@@ -220,7 +213,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
 
               const SizedBox(height: 30),
 
-              /* SUBMIT BUTTON */
               SizedBox(
                 height: 52,
                 child: ElevatedButton(

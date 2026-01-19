@@ -21,13 +21,14 @@ class EvidenceAdapter extends TypeAdapter<Evidence> {
       latitude: fields[1] as double,
       longitude: fields[2] as double,
       timestamp: fields[3] as DateTime,
+      locationName: fields[4] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, Evidence obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.imagePath)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class EvidenceAdapter extends TypeAdapter<Evidence> {
       ..writeByte(2)
       ..write(obj.longitude)
       ..writeByte(3)
-      ..write(obj.timestamp);
+      ..write(obj.timestamp)
+      ..writeByte(4)
+      ..write(obj.locationName);
   }
 
   @override

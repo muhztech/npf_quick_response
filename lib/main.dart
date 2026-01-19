@@ -7,25 +7,22 @@ import 'report_incident.dart';
 import 'capture_evidence.dart';
 import 'services/sync_service.dart';
 
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SyncService.syncEvidenceIfOnline();
 
   /* =========================
      HIVE INITIALIZATION
-     (Option H – Offline Storage)
      ========================= */
   await Hive.initFlutter();
-  
 
-  // Register Evidence adapter (REQUIRED)
   if (!Hive.isAdapterRegistered(1)) {
     Hive.registerAdapter(EvidenceAdapter());
   }
 
-  // Open typed box
   await Hive.openBox<Evidence>('evidenceBox');
+
+  // Sync when app starts
+  SyncService.syncEvidenceIfOnline();
 
   runApp(const NpfQuickResponseApp());
 }
@@ -38,10 +35,56 @@ class NpfQuickResponseApp extends StatelessWidget {
     return MaterialApp(
       title: 'NPF Quick Response',
       debugShowCheckedModeBanner: false,
+
+      /* =========================
+         GLOBAL APP THEME
+         ========================= */
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: Colors.blueGrey,
+
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0B3C5D), // Police Blue
+          primary: const Color(0xFF0B3C5D),
+          secondary: const Color(0xFFF4B41A), // Gold
+          error: const Color(0xFFC62828),
+          brightness: Brightness.light,
+        ),
+
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0B3C5D),
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          elevation: 2,
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0B3C5D),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 14,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+
+        // ✅ FIXED FOR MATERIAL 3
+        cardTheme: CardThemeData(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFFF4B41A),
+          foregroundColor: Colors.black,
+        ),
       ),
+
       home: const DashboardPage(),
     );
   }
@@ -58,7 +101,6 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('NPF Quick Response'),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -109,7 +151,7 @@ class DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: isEmergency
-          ? Colors.red.withOpacity(0.1)
+          ? const Color(0xFFC62828).withOpacity(0.1)
           : Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       elevation: isEmergency ? 6 : 3,
@@ -117,7 +159,10 @@ class DashboardCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         splashColor: isEmergency
             ? Colors.red.withOpacity(0.3)
-            : Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            : Theme.of(context)
+                .colorScheme
+                .primary
+                .withOpacity(0.2),
         onTap: () {
           switch (label) {
             case 'Emergency SOS':
@@ -165,7 +210,9 @@ class DashboardCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 52,
-                color: isEmergency ? Colors.red : null,
+                color: isEmergency
+                    ? const Color(0xFFC62828)
+                    : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 14),
               Text(
@@ -174,7 +221,9 @@ class DashboardCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: isEmergency ? Colors.red : null,
+                  color: isEmergency
+                      ? const Color(0xFFC62828)
+                      : null,
                 ),
               ),
               if (isEmergency) ...[
@@ -186,7 +235,7 @@ class DashboardCard extends StatelessWidget {
                     color: Colors.redAccent,
                   ),
                 ),
-              ]
+              ],
             ],
           ),
         ),
@@ -240,7 +289,7 @@ class AboutPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueGrey,
+                color: Color(0xFF0B3C5D),
               ),
             ),
           ],

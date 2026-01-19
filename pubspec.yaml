@@ -1,5 +1,7 @@
 name: npf_quick_response
+
 description: NPF Quick Response App
+
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -12,9 +14,11 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.6
+
   encrypt: ^5.0.3
   http: ^1.2.0
   connectivity_plus: ^5.0.2
+  geocoding: ^2.1.0
 
   # 📍 GPS Location
   geolocator: ^10.1.1

@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -6,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 
 import 'models/evidence.dart';
+import 'services/location_service.dart';
 
 class CaptureEvidencePage extends StatefulWidget {
   const CaptureEvidencePage({super.key});
@@ -20,6 +22,8 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
   File? _imageFile;
   Position? _position;
   String? _timestamp;
+  String? _locationName;
+
   bool _loadingLocation = false;
 
   /* =========================
@@ -34,6 +38,7 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
         _imageFile = File(image.path);
         _timestamp = _generateTimestamp();
       });
+
       await _fetchLocation();
     }
   }
@@ -50,24 +55,27 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
         _imageFile = File(image.path);
         _timestamp = _generateTimestamp();
       });
+
       await _fetchLocation();
     }
   }
 
   /* =========================
-     GET GPS LOCATION
+     GET GPS + RESOLVE LOCATION
      ========================= */
   Future<void> _fetchLocation() async {
     setState(() => _loadingLocation = true);
 
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled =
+        await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showMessage('Location services are disabled.');
       setState(() => _loadingLocation = false);
       return;
     }
 
-    LocationPermission permission = await Geolocator.checkPermission();
+    LocationPermission permission =
+        await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
@@ -89,8 +97,14 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
+    final locationName = await LocationService.resolveAddress(
+      position.latitude,
+      position.longitude,
+    );
+
     setState(() {
       _position = position;
+      _locationName = locationName;
       _loadingLocation = false;
     });
   }
@@ -99,7 +113,8 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
      TIMESTAMP GENERATOR
      ========================= */
   String _generateTimestamp() {
-    return DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+    return DateFormat('yyyy-MM-dd HH:mm:ss')
+        .format(DateTime.now());
   }
 
   /* =========================
@@ -122,9 +137,9 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
       latitude: _position!.latitude,
       longitude: _position!.longitude,
       timestamp: DateTime.now(),
+      locationName: _locationName ?? 'Unknown location',
     );
 
-    // 🔐 SAVE OFFLINE (Hive)
     final box = Hive.box<Evidence>('evidenceBox');
     await box.add(evidence);
 
@@ -155,7 +170,11 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
             const SizedBox(height: 16),
 
             if (_timestamp != null)
-              _infoTile(Icons.access_time, 'Timestamp', _timestamp!),
+              _infoTile(
+                Icons.access_time,
+                'Timestamp',
+                _timestamp!,
+              ),
 
             if (_loadingLocation)
               const Padding(
@@ -163,12 +182,11 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
                 child: CircularProgressIndicator(),
               ),
 
-            if (_position != null)
+            if (_locationName != null)
               _infoTile(
                 Icons.location_on,
                 'Location',
-                'Lat: ${_position!.latitude}, '
-                'Lng: ${_position!.longitude}',
+                _locationName!,
               ),
 
             const Spacer(),
@@ -200,10 +218,9 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.attach_file),
                 label: const Text('Attach Evidence'),
-                onPressed:
-                    (_imageFile != null && _position != null)
-                        ? _attachEvidence
-                        : null,
+                onPressed: (_imageFile != null && _position != null)
+                    ? _attachEvidence
+                    : null,
               ),
             ),
           ],
@@ -215,7 +232,11 @@ class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
   /* =========================
      INFO TILE
      ========================= */
-  Widget _infoTile(IconData icon, String title, String value) {
+  Widget _infoTile(
+    IconData icon,
+    String title,
+    String value,
+  ) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
