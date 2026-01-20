@@ -1,10 +1,11 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 import 'capture_evidence.dart';
 import 'models/evidence.dart';
 import 'services/incident_id.dart';
+import 'security/evidence_encryption.dart';
 
 class ReportIncidentPage extends StatefulWidget {
   const ReportIncidentPage({super.key});
@@ -51,7 +52,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
     );
 
     if (result != null) {
-      setState(() {}); // Refresh UI from Hive
+      setState(() {}); // Refresh UI
     }
   }
 
@@ -194,11 +195,32 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
-                        leading: Image.file(
-                          File(evidence.imagePath),
+                        leading: SizedBox(
                           width: 56,
                           height: 56,
-                          fit: BoxFit.cover,
+                          child: FutureBuilder<Uint8List>(
+                            future: EvidenceEncryption.decryptToBytes(
+                              evidence.encryptedPath,
+                              evidence.ivBase64, // ✅ FIXED
+                            ),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                );
+                              }
+
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.memory(
+                                  snapshot.data!,
+                                  fit: BoxFit.cover,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                         title: Text(
                           'Evidence • ${evidence.formattedTime}',

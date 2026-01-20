@@ -17,10 +17,11 @@ class EvidenceAdapter extends TypeAdapter<Evidence> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Evidence(
-      imagePath: fields[0] as String,
+      encryptedPath: fields[0] as String,
       latitude: fields[1] as double,
       longitude: fields[2] as double,
       timestamp: fields[3] as DateTime,
+      ivBase64: fields[5] as String,
       locationName: fields[4] as String,
     );
   }
@@ -28,9 +29,9 @@ class EvidenceAdapter extends TypeAdapter<Evidence> {
   @override
   void write(BinaryWriter writer, Evidence obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
-      ..write(obj.imagePath)
+      ..write(obj.encryptedPath)
       ..writeByte(1)
       ..write(obj.latitude)
       ..writeByte(2)
@@ -38,7 +39,9 @@ class EvidenceAdapter extends TypeAdapter<Evidence> {
       ..writeByte(3)
       ..write(obj.timestamp)
       ..writeByte(4)
-      ..write(obj.locationName);
+      ..write(obj.locationName)
+      ..writeByte(5)
+      ..write(obj.ivBase64);
   }
 
   @override

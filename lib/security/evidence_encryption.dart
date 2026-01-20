@@ -2,39 +2,56 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 
 class EvidenceEncryption {
-  // 🔑 Static key (Phase 1)
-  // Later: derive per-device
-  static final _key = Key.fromUtf8(
-    '32_characters_secure_key_here!'
-  );
-  static final _iv = IV.fromLength(16);
-  static final _encrypter = Encrypter(AES(_key));
+  static final _key = Key.fromUtf8('16CHARSECRETKEY!'); // demo key
 
-  /// Encrypt image file → returns encrypted file path
-  static Future<String> encryptAndSave(File image) async {
-    final bytes = await image.readAsBytes();
-    final encrypted = _encrypter.encryptBytes(bytes, iv: _iv);
+  /* =========================
+     ENCRYPT + SAVE
+     ========================= */
+  static Future<Map<String, String>> encryptAndSave(
+    File inputFile,
+  ) async {
+    final bytes = await inputFile.readAsBytes();
+
+    final iv = IV.fromSecureRandom(16);
+    final encrypter = Encrypter(AES(_key));
+
+    final encrypted =
+        encrypter.encryptBytes(bytes, iv: iv);
 
     final dir = await getApplicationDocumentsDirectory();
-    final encryptedPath = p.join(
-      dir.path,
-      'evidence_${DateTime.now().millisecondsSinceEpoch}.enc',
+    final encryptedFile = File(
+      '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.enc',
     );
 
-    final encryptedFile = File(encryptedPath);
     await encryptedFile.writeAsBytes(encrypted.bytes);
 
-    return encryptedPath;
+    return {
+      'path': encryptedFile.path,
+      'iv': iv.base64,
+    };
   }
 
-  /// Decrypt encrypted file → Uint8List for preview
-  static Future<Uint8List> decryptToBytes(String encryptedPath) async {
-    final encryptedBytes = await File(encryptedPath).readAsBytes();
-    final encrypted = Encrypted(encryptedBytes);
-    final decrypted = _encrypter.decryptBytes(encrypted, iv: _iv);
+  /* =========================
+     DECRYPT TO BYTES
+     ========================= */
+  static Future<Uint8List> decryptToBytes(
+    String encryptedPath,
+    String ivBase64,
+  ) async {
+    final encryptedFile = File(encryptedPath);
+    final encryptedBytes =
+        await encryptedFile.readAsBytes();
+
+    final iv = IV.fromBase64(ivBase64);
+    final encrypter = Encrypter(AES(_key));
+
+    final decrypted = encrypter.decryptBytes(
+      Encrypted(encryptedBytes),
+      iv: iv,
+    );
+
     return Uint8List.fromList(decrypted);
   }
 }
